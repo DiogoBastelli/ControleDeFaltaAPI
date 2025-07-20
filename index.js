@@ -24,22 +24,36 @@ connection.connect(err => {
 
 app.post('/lotes', (req, res) => {
   const lote = req.body;
-  const sql = `
+  const sqlInsert = `
     INSERT INTO controle_lotes 
     (ordem_montagem, ordem_venda, cliente, item_venda, equipamento, quantidade_total, quantidade_recebida) 
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
-  connection.query(
-    sql,
-    [lote.om, lote.ov, lote.cliente, lote.item, lote.equipamento, lote.quantiTotal, lote.quantiDesc],
-    (err, result) => {
-      if (err) {
-        console.error('Erro ao inserir lote:', err);
-        res.status(500).send('Erro ao cadastrar lote');
-      } else {
-        res.status(200).json({ message: 'Lote cadastrado com sucesso!' });
 
+  connection.query(
+    'SELECT * FROM controle_lotes WHERE ordem_montagem = ?',
+    [lote.om],
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: 'Erro ao verificar duplicidade' });
       }
+
+      if (rows.length > 0) {
+        return res.status(400).json({ error: 'Já existe lote com essa OM!!' });
+      }
+
+      connection.query(
+        sqlInsert,
+        [lote.om, lote.ov, lote.cliente, lote.item, lote.equipamento, lote.quantiTotal, lote.quantiDesc],
+        (err, result) => {
+          if (err) {
+            console.error('Erro ao inserir lote:', err);
+            return res.status(500).json({ error: 'Erro ao cadastrar lote' });
+          }
+
+          res.status(201).json({ message: 'Lote cadastrado com sucesso!' });
+        }
+      );
     }
   );
 });
