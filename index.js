@@ -26,9 +26,10 @@ app.post('/lotes', (req, res) => {
   const lote = req.body;
   const sqlInsert = `
     INSERT INTO controle_lotes 
-    (ordem_montagem, ordem_venda, cliente, item_venda, equipamento, quantidade_total, quantidade_recebida) 
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    (ordem_montagem, ordem_venda, cliente, item_venda, equipamento, quantidade_total, quantidade_reprovada, local, defeito, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
+
 
   connection.query(
     'SELECT * FROM controle_lotes WHERE ordem_montagem = ?',
@@ -44,13 +45,23 @@ app.post('/lotes', (req, res) => {
 
       connection.query(
         sqlInsert,
-        [lote.om, lote.ov, lote.cliente, lote.item, lote.equipamento, lote.quantiTotal, lote.quantiDesc],
+        [
+          lote.om,
+          lote.ov,
+          lote.cliente,
+          lote.item,
+          lote.equipamento,
+          lote.quantiTotal,
+          lote.reprovado,
+          lote.local,
+          lote.defeito,
+          lote.status
+        ],
         (err, result) => {
           if (err) {
             console.error('Erro ao inserir lote:', err);
             return res.status(500).json({ error: 'Erro ao cadastrar lote' });
           }
-
           res.status(201).json({ message: 'Lote cadastrado com sucesso!' });
         }
       );
@@ -58,12 +69,13 @@ app.post('/lotes', (req, res) => {
   );
 });
 
-app.listen(3000, () => {
-  console.log('API rodando em http://localhost:3000');
+app.listen(3000, '0.0.0.0', () => {
+  console.log('API rodando em http://0.0.0.0:3000');
 });
 
+
 app.get('/lotes', (req, res) => {
-  const sql = 'SELECT * FROM controle_lotes ORDER BY data_recebimento DESC';
+  const sql = 'SELECT * FROM controle_lotes ORDER BY data DESC';
   connection.query(sql, (err, results) => {
     if (err) {
       console.error('Erro ao buscar lotes:', err);
