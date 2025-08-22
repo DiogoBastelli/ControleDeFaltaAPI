@@ -26,7 +26,7 @@ app.post('/lotes', (req, res) => {
   const lote = req.body;
   const sqlInsert = `
     INSERT INTO controle_lotes 
-    (ordem_montagem, ordem_venda, cliente, item_venda, equipamento, quantidade_total, quantidade_reprovada, local, defeito, status)
+    (ordem_montagem, ordem_venda, cliente, item_venda, equipamento, quantidade_total, reprovado, local, defeito, status)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
@@ -85,3 +85,33 @@ app.get('/lotes', (req, res) => {
     }
   });
 });
+
+app.get('/lotes/om/:om', (req, res) => {
+  const ordemMontagem = req.params.om;
+
+  const sql = 'SELECT * FROM controle_lotes WHERE ordem_montagem = ? ORDER BY data DESC';
+  connection.query(sql, [ordemMontagem], (err, results) => {
+    if (err) {
+      console.error('Erro ao buscar lote pela OM:', err);
+      return res.status(500).json({ error: 'Erro ao buscar lote' });
+    }
+    res.status(200).json(results);
+  });
+});
+
+app.patch('/lotes/finalizar/:om', (req, res) => {
+  const ordemMontagem = req.params.om;
+  const dataFinalizacao = new Date();
+  const status = 'Pronto';
+
+  const sql = 'UPDATE controle_lotes SET status = ?, data_finalizacao = ? WHERE ordem_montagem = ?';
+  connection.query(sql, [status, dataFinalizacao, ordemMontagem], (err, result) => {
+    if (err) {
+      console.error('Erro ao finalizar lote:', err);
+      return res.status(500).json({ error: 'Erro ao finalizar lote' });
+    }
+    res.status(200).json({ message: 'Ordem finalizada com sucesso!' });
+  });
+});
+
+
